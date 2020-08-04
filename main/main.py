@@ -30,7 +30,9 @@ def show_clean_noisy(images_noisy,images_clean):
 
     n = 10
     plt.figure(figsize=(20, 10))
+    plt.title("Comparison")
     for i in range(n):
+
         # display original
         ax = plt.subplot(2, n, i + 1)
         plt.imshow(images_noisy[i].reshape(28, 28))
@@ -42,15 +44,13 @@ def show_clean_noisy(images_noisy,images_clean):
         plt.gray()
     plt.show()
 
-
-
+import os
 
 def main():
 
     (train_images, train_labels), (test_images, test_labels)= import_data()
-    print("========>Data imported!")
 
-
+    #Normalize the data
     train_images=train_images.astype('float32')/255
     test_images = test_images.astype('float32') / 255
 
@@ -59,9 +59,14 @@ def main():
 
     (train_images_noisy, test_images_noisy) = add_noise(train_images, test_images)
 
+    #Use this function if you want to se the original and noisy versions of the images
     show_clean_noisy(test_images_noisy,test_images)
 
+
+    #Autoencoding
     model = Sequential()
+
+    #Codification
     model.add(Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=(28, 28, 1)))
     model.add(MaxPooling2D((2, 2), padding='same'))
     model.add(Conv2D(8, (3, 3), activation='relu', padding='same'))
@@ -82,11 +87,13 @@ def main():
 
     model.summary()
 
-    model.fit(train_images_noisy, train_images, epochs=10, batch_size=256, shuffle=True,
+    model.fit(train_images_noisy, train_images, epochs=20, batch_size=256, shuffle=True,
               validation_data=(test_images_noisy, test_images))
 
     decoded_images = model.predict(test_images_noisy)
 
+
+    #Drawing images for comparison
     n = 10
     plt.figure(figsize=(20, 10))
     for i in range(n):
@@ -98,6 +105,7 @@ def main():
         plt.imshow(decoded_images[i].reshape(28, 28), cmap="binary")
 
     plt.show()
+
 
 if __name__ == "__main__":
     main()
