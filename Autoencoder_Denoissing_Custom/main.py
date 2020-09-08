@@ -4,18 +4,17 @@ import cv2
 import os
 import numpy as np
 import random
-# save numpy array as csv file
-from numpy import asarray
-from numpy import savetxt
+
 import matplotlib.pyplot as plt
 from skimage import color
 import pickle
 import time
 from tensorflow.keras.models import Sequential
 import  varname
+from constant.py import *
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout
 
-
+#Use noise_factor 0.0 < x < 1.0
 def add_noise(x_train, x_test, noise_factor):
     #noise_factor = 0.4
     x_train_noisy = x_train + noise_factor * np.random.normal(loc=0.0, scale=1.0, size=x_train.shape)
@@ -25,34 +24,20 @@ def add_noise(x_train, x_test, noise_factor):
     x_test_noisy = np.clip(x_test_noisy, 0., 1.)
     return (x_train_noisy, x_test_noisy )
 
+#Retuns an array of images
 def simple_load():
     IMG_SIZE = 100
-    training_imgs = []
-    test_imgs = []
-    original_imgs = []
-    directory_train = r"/home/marti/Desktop/Datasets/birds/525159_963647_bundle_archive/birds_train"
-    classification = os.listdir(directory_train)
-
-    for category in classification:
-        path = os.path.join(directory_train, category)
-        class_num = classification.index(category)
-        for img in os.listdir(path):
-            try:
-
-                array_img = cv2.imread(os.path.join(path, img))
-
-                original_imgs.append(array_img)
-
-                new_img_array = cv2.resize(array_img, (IMG_SIZE, IMG_SIZE))
-
-                training_imgs.append(new_img_array)
-                test_imgs.append([new_img_array, class_num])
-            except Exception as error:
-                pass
-        print("Load of ", category, " completed")
-
-
-    return training_imgs
+    dataset = []
+    directory = r"/home/marti/Desktop/Datasets/Catsvsdogs/test"
+    for img in os.listdir(directory):
+        try:
+            array_img = cv2.imread(os.path.join(directory, img))
+            new_img_array = cv2.resize(array_img, (IMG_SIZE, IMG_SIZE))
+            dataset.append(new_img_array)
+        except Exception as error:
+            pass
+    print("Load of ", img, " completed")
+    return dataset
 
 #Save test and train images (NO NOISE)
 def save_data(img_train, img_test, var1_name, var2_name):
