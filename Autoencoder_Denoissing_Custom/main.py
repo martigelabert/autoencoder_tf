@@ -5,12 +5,15 @@ import os
 import numpy as np
 import random
 
+import os.path
+from os import path
+
 import matplotlib.pyplot as plt
 from skimage import color
 import pickle
 import time
 from tensorflow.keras.models import Sequential
-import  varname
+import varname
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, UpSampling2D
 
 #Use noise_factor 0.0 < x < 1.0
@@ -27,14 +30,19 @@ def simple_load():
     IMG_SIZE = 100
     dataset = []
     directory = r"/home/marti/Desktop/Datasets/Catsvsdogs/test"
+    counter = 0;
     for img in os.listdir(directory):
         try:
             array_img = cv2.imread(os.path.join(directory, img))
             new_img_array = cv2.resize(array_img, (IMG_SIZE, IMG_SIZE))
             dataset.append(new_img_array)
+            print("Load of ", img, " completed")
+            counter = counter + 1
+            if counter == 100:
+                break
         except Exception as error:
             pass
-    print("Load of ", img, " completed")
+
     return dataset
 #Save test and train images (NO NOISE)
 def save_data(img_train, img_test, var1_name, var2_name):
@@ -53,6 +61,7 @@ def save_data(img_train, img_test, var1_name, var2_name):
     return 0
 #Save test and train images (NO NOISE)
 def save_dataset(dataset, var1_name):
+    print("inside saving data")
     file1=var1_name+".pickle"
     ######SAVING DATA#######
     pickle_save = open(file1, "wb")
@@ -60,20 +69,19 @@ def save_dataset(dataset, var1_name):
     pickle_save.close()
     ###END SAVING DATA###
     return 0
+
 #FIRST FUNCTION
 def save_for_fist_time():
     IMG_SIZE = 100
     print("This is a demo")
     dataset= simple_load()
+    print("Data loaded")
 
     #Shuffle data for future training
-    random.shuffle(dataset)
+    #random.shuffle(dataset)
 
     img_test = []
     img_train = []
-
-    img_train_n=[]
-    img_test_n=[]
 
     n_level = [0.1,0.2,0.3,0.4]
 
@@ -92,15 +100,16 @@ def save_for_fist_time():
 
     # -1 is just for saying how many elements we have? in this case we don't know
     # IMG_SIZE is the dimension of X and Y axis of the image(data)
-    # 1 is for sayiing that we are in gray scale and is just 1 value, if we
+    # 1 is for saying that we are in gray scale and is just 1 value, if we
     # want to do it with color the value would be 3 (RGB)
     img_train = np.array(img_train).reshape(-1, IMG_SIZE, IMG_SIZE, 3)
     img_test = np.array(img_test).reshape(-1, IMG_SIZE, IMG_SIZE, 3)
 
+    print("Start saving")
 
     #QUEDA GUARDAR TODAS LAS IMAGENES CON RUIDO
-    save_data(img_train, img_test,varname.varname(img_train), varname.varname(img_test))
-    save_dataset(dataset,varname.varname(dataset))
+    save_data(img_train, img_test,'img_train','img_test')
+    save_dataset(dataset,'dataset')
 def load_saved_data():
     pk_opend = open("img_train.pickle", "rb")
     x = pickle.load(pk_opend)
@@ -213,7 +222,10 @@ def showing_prediction():
 
 
 def main():
-    save_for_fist_time()
+
+    if path.exists('dataset.pickle')!=True:
+        save_for_fist_time()
+
 
 if __name__ == "__main__":
     main()
