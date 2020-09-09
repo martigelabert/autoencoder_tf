@@ -7,7 +7,7 @@ import random
 
 import os.path
 from os import path
-
+from skimage.util import random_noise
 import matplotlib.pyplot as plt
 from skimage import color
 import pickle
@@ -35,6 +35,9 @@ def simple_load():
         try:
             array_img = cv2.imread(os.path.join(directory, img))
             new_img_array = cv2.resize(array_img, (IMG_SIZE, IMG_SIZE))
+            new_img_array=cv2.cvtColor(new_img_array, cv2.COLOR_BGR2RGB)
+            #plt.imshow(new_img_array)
+            #plt.show()
             dataset.append(new_img_array)
             print("Load of ", img, " completed")
             counter = counter + 1
@@ -85,17 +88,18 @@ def save_for_fist_time():
 
     n_level = [0.1,0.2,0.3,0.4]
 
-    #This have O(n) but Idont care, giving random noise  to the images
+    # This have O(n) but Idont care
     for img in dataset:
-        noise = random.randrange(len(n_level))
-        x_train_noisy = img + noise * np.random.normal(loc=0.0, scale=1.0, size=img.shape)
-        x_test_noisy = img + noise * np.random.normal(loc=0.0, scale=1.0, size=img.shape)
+        img_train.append(img)
+        img_test.append(img)
 
-        x_train_noisy = np.clip(x_train_noisy, 0., 1.)
-        x_test_noisy = np.clip(x_test_noisy, 0., 1.)
+    img_train = img_train + 0.1 * np.random.normal(loc=0.0, scale=1.0, size=img_train.shape)
+    img_test = img_test + 0.1 * np.random.normal(loc=0.0, scale=1.0, size=img_test.shape)
 
-        img_train.append(x_train_noisy)
-        img_test.append(x_test_noisy)
+
+    img_train = np.clip(img_train, 0., 1.)
+    img_test = np.clip(img_train, 0., 1.)
+    #dataset = np.clip( dataset, 0., 1.)
 
 
     # -1 is just for saying how many elements we have? in this case we don't know
@@ -110,6 +114,7 @@ def save_for_fist_time():
     #QUEDA GUARDAR TODAS LAS IMAGENES CON RUIDO
     save_data(img_train, img_test,'img_train','img_test')
     save_dataset(dataset,'dataset')
+
 def load_saved_data():
     pk_opend = open("img_train.pickle", "rb")
     x = pickle.load(pk_opend)
@@ -137,24 +142,25 @@ def first_train():
     tb = keras.callbacks.TensorBoard(log_dir='logs/{}'.format(name))
 
     img_x, img_y, img_z = load_saved_data()
+
     print("Se han cargado los datos")
 
-    # train, test, original
-    img_x = img_x / 255.0
-    img_y = img_y / 255.0
-    #img_z have the clean images
-    img_z = img_z / 255.0
-
+    #Forgot to clip it :c
+    #img_z = np.clip(img_z, 0., 1.)
+    #print(img_z[1])
     # print(img_x[1])
-
+    img_z= np.array(img_z)
+    img_z=img_z/255.0
+    img_z=np.clip(img_z, 0., 1.)
     #I don't need the 8000 value from the array so, we will omit them with
     print(img_x.shape[1:])
 
     # make model
     # Autoencoding
     model = Sequential()
+
     # Codification
-    model.add(Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=(28, 28, 1)))
+    model.add(Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=(100, 100, 3)))
     model.add(MaxPooling2D((2, 2), padding='same'))
     model.add(Conv2D(8, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D((2, 2), padding='same'))
@@ -174,10 +180,18 @@ def first_train():
 
     model.summary()
 
-    model.fit(img_x, img_z, epochs=12, batch_size=64,shuffle=True, callbacks=[tb])
+    model.fit(img_x, img_z, epochs=10, batch_size=32,shuffle=True, callbacks=[tb])
+    decoded_images = model.predict(img_y)
 
-    p=model.predict(img_y)
-    print(p)
+    # Drawing images for comparison
+    n = 10
+    plt.figure(figsize=(20, 10))
+    for i in range(n):
+        plt.subplot(2, n, i + 1)
+        plt.imshow(img_y[i])
+
+        plt.subplot(2, n, i + 1 + n)
+        plt.imshow(decoded_images[i])
 
     plt.show()
     model.save('den_custom_100x100.model')
@@ -225,6 +239,7 @@ def main():
 
     if path.exists('dataset.pickle')!=True:
         save_for_fist_time()
+    first_train()
 
 
 if __name__ == "__main__":

@@ -13,6 +13,7 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropou
 #References
 #https://medium.com/analytics-vidhya/denoising-autoencoder-on-colored-images-using-tensorflow-17bf63e19dad
 #https://books.google.es/books?hl=es&lr=&id=20EwDwAAQBAJ&oi=fnd&pg=PP1&dq=all+activation+functions+keras&ots=lHhEakaTU1&sig=-DITKpvlfsLfExXtHl-_FMwF5i4#v=onepage&q=all%20activation%20functions%20keras&f=false
+#https://github.com/wbhu/DnCNN-tensorflow
 
 #Load and return the complete data
 def load_dataset():
@@ -43,6 +44,7 @@ def create_model():
 
     e_conv1 = Conv2D(64, (3, 3), activation='relu', padding='same')(x)
     pool1 = MaxPooling2D((2, 2), padding='same')(e_conv1)
+
     #BatchNormalization used to normalize the input layer by re-centering and re-scaling.
     batchnorm_1 = BatchNormalization()(pool1)
     e_conv2 = Conv2D(32, (3, 3), activation='relu', padding='same')(batchnorm_1)
@@ -59,12 +61,15 @@ def create_model():
     r = Conv2D(3, (3, 3), activation='sigmoid', padding='same')(up3)
     model = keras.Model(x, r)
     model.compile(optimizer='adam', loss='mean_squared_error')
-    return model
 
+    return model
 
 def show_images(n, img_noisy, decoded_imgs):
 
+
     for i in range(n):
+
+
         # display original
         ax = plt.subplot(2, n, i + 1)
         plt.imshow(img_noisy[i])
@@ -78,6 +83,8 @@ def show_images(n, img_noisy, decoded_imgs):
         # plt.gray()
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
+
+    plt.savefig('Comparison.png')
     plt.show()
 
 def main():
@@ -115,8 +122,6 @@ def main():
     #flat = transpose_clear.reshape(-1, IMG_SIZE*IMG_SIZE)
     #flat_N = transpose_noise.reshape(-1, IMG_SIZE * IMG_SIZE)
 
-
-
     # This is for saving the cnn with a different name eacht time is trained
     name = "denoissing_catsdogs_clas_cnn_64x2-{}".format(int(time.time()))
 
@@ -125,20 +130,22 @@ def main():
     # Autoencoding
     #model = keras.Sequential()
 
-    model=create_model()
+    #model=create_model()
+    model =create_model()
+
     model.summary()
 
-    model.fit(img_noisy,img_original, epochs=10, batch_size=16, shuffle=True, callbacks=[tb])
+    history=model.fit(img_noisy,img_original, epochs=10, batch_size=16, shuffle=True, callbacks=[tb])
 
     model.save('NNden_model_newmodel.model')
+
     decoded_imgs = model.predict(img_noisy)
 
-    show_images(10,img_noisy, decoded_imgs)
-
-
+    show_images(5,img_noisy, decoded_imgs)
 
 if __name__ == "__main__":
    main()
+
 def deb():
     IMG_SIZE = 100
     dataset = load_dataset()
