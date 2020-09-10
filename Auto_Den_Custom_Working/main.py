@@ -5,11 +5,10 @@ import cv2
 import os
 import numpy as np
 import os.path
-from os import path
 import matplotlib.pyplot as plt
 import time
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, UpSampling2D, BatchNormalization, Input
-
+import pickle
 #References
 #https://medium.com/analytics-vidhya/denoising-autoencoder-on-colored-images-using-tensorflow-17bf63e19dad
 #https://books.google.es/books?hl=es&lr=&id=20EwDwAAQBAJ&oi=fnd&pg=PP1&dq=all+activation+functions+keras&ots=lHhEakaTU1&sig=-DITKpvlfsLfExXtHl-_FMwF5i4#v=onepage&q=all%20activation%20functions%20keras&f=false
@@ -60,7 +59,7 @@ def create_model():
     up3 = UpSampling2D((2, 2))(d_conv3)
     r = Conv2D(3, (3, 3), activation='sigmoid', padding='same')(up3)
     model = keras.Model(x, r)
-    model.compile(optimizer='adam', loss='mean_squared_error')
+    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])
 
     return model
 
@@ -135,7 +134,29 @@ def main():
 
     model.summary()
 
-    history=model.fit(img_noisy,img_original, epochs=10, batch_size=16, shuffle=True, callbacks=[tb])
+    history=model.fit(img_noisy,img_original, epochs=10, batch_size=32, shuffle=True, callbacks=[tb], validation_data=(img_noisy,img_original),
+)
+
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
+    # summarize history for loss
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
+
+
+    #pickle_save = open("history.pickle", "wb")
+    #pickle.dump(history, pickle_save)
+    #pickle_save.close()
 
     model.save('NNden_model_newmodel.model')
 
@@ -143,8 +164,8 @@ def main():
 
     show_images(5,img_noisy, decoded_imgs)
 
-if __name__ == "__main__":
-   main()
+#if __name__ == "__main__":
+#  main()
 
 def deb():
     IMG_SIZE = 100
@@ -182,4 +203,49 @@ def deb():
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
     plt.show()
+
+def plots():
+    IMG_SIZE = 100
+    dataset = load_dataset()
+    dataset = np.array(dataset)
+
+    # Transform to a propper type
+    img_original = dataset.astype('Float32')
+    img_original = img_original / 255.0
+
+    # Give some gaussian noise to the imgs
+    img_noisy = img_original + 0.1 * np.random.normal(loc=0.0, scale=1.0, size=img_original.shape)
+    # Due to the value range we need to set limits, because it's possible to get values above 1.0
+    img_noisy = np.clip(img_noisy, 0., 1.)
+
+
+    # This is for saving the cnn with a different name eacht time is trained
+    name = "denoissing_catsdogs_clas_cnn_64x2-{}".format(int(time.time()))
+
+    tb = keras.callbacks.TensorBoard(log_dir='logs/{}'.format(name))
+
+    # Autoencoding
+    # model = keras.Sequential()
+
+    # model=create_model()
+    model =tf.keras.models.load_model('NNden_model_newmodel.model')
+
+    decoded_imgs = model.predict(img_noisy)
+
+    plt.imshow(img_original[0])
+    plt.show()
+
+    plt.imshow(img_noisy[0])
+    plt.show()
+
+    plt.imshow(decoded_imgs[0])
+    plt.show()
+
+plots()
+
+
+
+
+
+
 
