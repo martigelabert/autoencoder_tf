@@ -23,11 +23,6 @@ as the main power calculator unit but nothing, don't take a look you don't need 
 Python_demo(abandoned-recovered): This just was an experiment with NN, I tried to use a simplified snake version
 to try to train it to play, I took the snake tutorial from a youtube, really funny, someday I will keep working on it
 
-Secret():You're trapped in the new world of Street Fighter 3
-The 3rd chapter so what's it gon' be?
-You're trapped in the new world of Street Fighter 3
-Make your first move, so what's in gon' be?
-
 ---------------------
 I know my code it's messy so, keep calm and let me clean it when I have time, no hard feelings, okey? :c
 
